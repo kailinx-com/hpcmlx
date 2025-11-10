@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: hpcmlx_db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hpcmlx_backend
+    env_file:
+      - .env
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8000 --workers 3 hpcmlx.wsgi:application"
+    volumes:
+      - static_volume:/app/staticfiles
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 8000)); s.close()' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+    container_name: hpcmlx_frontend
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/usr/share/nginx/html/static:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  static_volume:
+
