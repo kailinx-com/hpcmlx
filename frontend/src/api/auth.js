@@ -1,13 +1,31 @@
 import axios from 'axios'
 
-const getCsrfToken = () => {
+// Cache for CSRF token
+let csrfTokenCache = null
+
+const getCsrfToken = async () => {
+  // Try to get from cookie first (for backwards compatibility)
   const name = 'csrftoken'
   const cookies = document.cookie.split(';')
   for (let cookie of cookies) {
     const [key, value] = cookie.trim().split('=')
-    if (key === name) return value
+    if (key === name && value) return value
   }
-  return null
+  
+  // If not in cookie (HttpOnly), fetch from API
+  if (!csrfTokenCache) {
+    try {
+      const response = await api.get('/auth/csrf-token/', {
+        withCredentials: true,
+      })
+      csrfTokenCache = response.data.csrfToken
+    } catch (error) {
+      console.warn('Failed to fetch CSRF token:', error)
+      return null
+    }
+  }
+  
+  return csrfTokenCache
 }
 
 const api = axios.create({
@@ -25,8 +43,8 @@ export const authApi = {
    * @param {string} password
    * @returns {Promise}
    */
-  login(username, password) {
-    const csrfToken = getCsrfToken()
+  async login(username, password) {
+    const csrfToken = await getCsrfToken()
     return api.post('/auth/login/', { username, password }, {
       headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
       withCredentials: true,
@@ -37,8 +55,10 @@ export const authApi = {
    * Logout current user
    * @returns {Promise}
    */
-  logout() {
-    const csrfToken = getCsrfToken()
+  async logout() {
+    const csrfToken = await getCsrfToken()
+    // Clear cache on logout
+    csrfTokenCache = null
     return api.post('/auth/logout/', {}, {
       headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
       withCredentials: true,

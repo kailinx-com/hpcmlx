@@ -19,7 +19,7 @@ from django.views.static import serve
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
 from experiments.views import home, ExperimentViewSet, TagViewSet
-from experiments.auth_views import current_user_view, logout_view
+from experiments.auth_views import current_user_view, logout_view, csrf_token_view
 
 router = DefaultRouter()
 router.register(r'experiments', ExperimentViewSet, basename='experiment')
@@ -30,7 +30,13 @@ urlpatterns = [
     
     # Auth endpoints
     path('api/auth/current-user/', current_user_view, name='auth-current-user'),
+    path('api/auth/csrf-token/', csrf_token_view, name='auth-csrf-token'),
     path('api/auth/logout/', logout_view, name='auth-logout'),
+    
+    # Serve static files (for admin and DRF)
+    re_path(r'^static/(?P<path>.*)$', serve, {
+        'document_root': settings.STATIC_ROOT,
+    }),
     
     # Vue frontend assets
     re_path(r'^assets/(?P<path>.*)$', serve, {
@@ -40,5 +46,5 @@ urlpatterns = [
 
     path('api/', include(router.urls)),
 
-    re_path(r'^(?!api|admin|assets).*', home),
+    re_path(r'^(?!api|admin|assets|static).*', home),
 ]

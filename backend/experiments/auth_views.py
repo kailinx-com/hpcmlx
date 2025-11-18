@@ -1,4 +1,5 @@
 from django.contrib.auth import logout
+from django.middleware.csrf import get_token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -24,6 +25,15 @@ def current_user_view(request):
             'authenticated': False,
             'user': None
         })
+
+"""
+Get CSRF token for frontend
+"""
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def csrf_token_view(request):
+    token = get_token(request)
+    return Response({'csrfToken': token})
 
 """
 Logs out user via Django admin session

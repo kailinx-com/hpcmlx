@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: hpcmlx
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: kailinxdocker/hpcmlx-backend:latest  # Update with your container registry
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hpcmlx-secrets
+              key: DB_PASSWORD
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: DB_PORT
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: hpcmlx-secrets
+              key: SECRET_KEY
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: DEBUG
+        - name: ALLOWED_HOSTS
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: ALLOWED_HOSTS
+        - name: CSRF_TRUSTED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: CSRF_TRUSTED_ORIGINS
+        command:
+        - sh
+        - -c
+        - |
+          python manage.py migrate &&
+          python manage.py collectstatic --noinput &&
+          gunicorn --bind 0.0.0.0:8000 --workers 3 hpcmlx.wsgi:application
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import socket; s=socket.socket(); s.connect(('localhost', 8000)); s.close()"
+          initialDelaySeconds: 40
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import socket; s=socket.socket(); s.connect(('localhost', 8000)); s.close()"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+

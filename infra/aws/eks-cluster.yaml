@@ -1,0 +1,41 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: hpcmlx-dev
+  region: us-east-1
+  version: "1.28"
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+  - metadata:
+      name: aws-load-balancer-controller
+      namespace: kube-system
+    wellKnownPolicies:
+      awsLoadBalancerController: true
+
+vpc:
+  cidr: 10.0.0.0/16
+  nat:
+    gateway: Single
+
+managedNodeGroups:
+  - name: hpcmlx-nodes
+    instanceType: t3.small
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 1
+    volumeSize: 20
+    ssh:
+      allow: false
+    labels:
+      role: worker
+    tags:
+      Environment: development
+      Application: hpcmlx
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hpcmlx-config
+  namespace: hpcmlx
+data:
+  # Database configuration
+  DB_NAME: "hpcmlx"
+  DB_USER: "hpcmlx_user"
+  DB_PORT: "5432"
+  DB_HOST: "postgres-service"
+  
+  # Application settings
+  DEBUG: "False"
+  # For Docker Desktop local testing - allows localhost access via port-forwarding
+  ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0"
+  # For Docker Desktop local testing - allows CSRF from localhost:8080 (port-forward)
+  CSRF_TRUSTED_ORIGINS: "http://localhost:8080,http://127.0.0.1:8080"
+  
+  # Frontend API URL (will be used during build)
+  VITE_API_URL: "http://backend-service:8000"
+
