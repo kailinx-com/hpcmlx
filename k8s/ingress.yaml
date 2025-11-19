@@ -4,36 +4,24 @@ metadata:
   name: hpcmlx-ingress
   namespace: hpcmlx
   annotations:
-    # NGINX Ingress Controller annotations
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    
-    # For production, uncomment SSL redirect:
-    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    
-    # Cert-manager annotations (uncomment if using cert-manager for TLS)
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # AWS Load Balancer Controller annotations (Production)
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    # For production, enable HTTPS (uncomment after setting up ACM certificate):
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/certificate-arn: <ACM_CERTIFICATE_ARN>
+    # alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # For now, HTTP only (update to HTTPS after certificate setup):
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
 spec:
-  # For Docker Desktop: You need to install an ingress controller first
-  # For production: Change to match your ingress controller (nginx, traefik, etc.)
-  ingressClassName: nginx
-  
-  # For Docker Desktop local testing: Skip TLS (use port-forwarding instead)
-  # For production: Uncomment and update with your domain
-  # tls:
-  # - hosts:
-  #   - yourdomain.com
-  #   - www.yourdomain.com
-  #   secretName: hpcmlx-tls
-  
   rules:
-  # For Docker Desktop: localhost (requires ingress controller installation)
-  # For production: Replace with your actual domain
-  - host: localhost  # Change to your domain for production (e.g., hpcmlx.example.com)
-    http:
+  - http:
       paths:
       - path: /
         pathType: Prefix
@@ -42,4 +30,3 @@ spec:
             name: frontend-service
             port:
               number: 80
-
