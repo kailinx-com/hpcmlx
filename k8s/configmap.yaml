@@ -12,10 +12,18 @@ data:
   
   # Application settings
   DEBUG: "False"
-  # For Docker Desktop local testing - allows localhost access via port-forwarding
-  ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0"
-  # For Docker Desktop local testing - allows CSRF from localhost:8080 (port-forward)
-  CSRF_TRUSTED_ORIGINS: "http://localhost:8080,http://127.0.0.1:8080"
+  # ALLOWED_HOSTS: Custom domain, ALB hostname, and localhost for port-forwarding
+  ALLOWED_HOSTS: "hpcmlx.kailinx.com,k8s-hpcmlx-hpcmlxin-129185ad22-2076893950.us-east-1.elb.amazonaws.com,localhost,127.0.0.1"
+  
+  # Enable HTTPS proxy detection
+  USE_HTTPS_PROXY: "True"
+  # CSRF_TRUSTED_ORIGINS: Custom domain URL with HTTPS and HTTP fallback
+  # Also include localhost for local testing via port-forwarding
+  CSRF_TRUSTED_ORIGINS: "https://hpcmlx.kailinx.com,http://hpcmlx.kailinx.com,https://k8s-hpcmlx-hpcmlxin-129185ad22-2076893950.us-east-1.elb.amazonaws.com,http://k8s-hpcmlx-hpcmlxin-129185ad22-2076893950.us-east-1.elb.amazonaws.com,http://localhost:8080,http://127.0.0.1:8080"
+
+  # Cookie security settings (set to True for HTTPS)
+  CSRF_COOKIE_SECURE: "True"  # Secure cookies for HTTPS
+  SESSION_COOKIE_SECURE: "True"  # Secure cookies for HTTPS
   
   # Frontend API URL (will be used during build)
   VITE_API_URL: "http://backend-service:8000"

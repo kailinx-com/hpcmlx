@@ -4,25 +4,55 @@ metadata:
   name: hpcmlx-ingress
   namespace: hpcmlx
   annotations:
-    # AWS Load Balancer Controller annotations (Production)
+    # AWS Load Balancer Controller annotations
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    # For production, enable HTTPS (uncomment after setting up ACM certificate):
-    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    # alb.ingress.kubernetes.io/certificate-arn: <ACM_CERTIFICATE_ARN>
-    # alb.ingress.kubernetes.io/ssl-redirect: "443"
-    # For now, HTTP only (update to HTTPS after certificate setup):
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    # HTTPS enabled with ACM certificate
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:557690608348:certificate/12dbabc4-aae3-4e44-9731-6e0b70bcf8fe
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/healthcheck-path: /
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
     alb.ingress.kubernetes.io/healthy-threshold-count: "2"
     alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+    # ALB group settings (optional - for managing multiple ingresses)
+    # alb.ingress.kubernetes.io/group.name: hpcmlx
+    # Preserve host header for proper CSRF validation
+    alb.ingress.kubernetes.io/target-group-attributes: |
+      stickiness.enabled=true,
+      stickiness.lb_cookie.duration_seconds=86400
 spec:
   rules:
-  - http:
+  - host: hpcmlx.kailinx.com
+    http:
       paths:
+      # Django admin routes (must come before frontend catch-all)
+      - path: /admin
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 8000
+      # Backend API routes
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 8000
+      # Static files (Django admin needs these)
+      - path: /static
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 8000
+      # Frontend routes (catch-all, must be last)
       - path: /
         pathType: Prefix
         backend:
