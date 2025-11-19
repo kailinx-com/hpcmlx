@@ -160,9 +160,33 @@ REST_FRAMEWORK = {
 # Cookie settings - secure in production, relaxed in development
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = not DEBUG  # True in production (HTTPS only)
+# Allow environment variable to override secure cookie setting (for HTTP behind proxy)
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', str(not DEBUG)).lower() == 'true'
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_HTTPONLY = True  # Security: prevent JavaScript access to CSRF cookie
-CSRF_COOKIE_SECURE = not DEBUG  # True in production (HTTPS only)
+CSRF_COOKIE_HTTPONLY = False  # Set to False so Django admin can access CSRF token in forms
+# Allow environment variable to override secure cookie setting (for HTTP behind proxy)
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', str(not DEBUG)).lower() == 'true'
+# CSRF_COOKIE_DOMAIN: Leave None to allow cookie to work with any domain (needed for ALB)
+CSRF_COOKIE_DOMAIN = None
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if os.environ.get('CSRF_TRUSTED_ORIGINS') else []
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS if origin.strip()]
+
+# Proxy/load balancer settings
+# When behind a proxy (like AWS ALB), Django needs to trust proxy headers
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+# Only set SECURE_PROXY_SSL_HEADER if using HTTPS at the proxy level
+# For HTTP behind proxy, leave this unset (None)
+if os.environ.get('USE_HTTPS_PROXY', 'False').lower() == 'true':
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Additional CSRF settings for proxy/load balancer
+# Ensure CSRF protection works correctly behind ALB
+CSRF_USE_SESSIONS = False  # Use cookies for CSRF tokens (default)
+CSRF_COOKIE_PATH = '/'  # Make CSRF cookie available for all paths
+
+# Security headers - disable COOP for HTTP (it's ignored by browsers anyway)
+# Cross-Origin-Opener-Policy is only effective over HTTPS
+# Setting to None disables it and removes the browser warning
+if not DEBUG and os.environ.get('USE_HTTPS_PROXY', 'False').lower() != 'true':
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = None

@@ -6,8 +6,8 @@ namespace: hpcmlx
 resources:
   - namespace.yaml
   - configmap.yaml
-  - postgres/statefulset.yaml
-  - postgres/service.yaml
+  # - postgres/statefulset.yaml  # Commented out - using RDS
+  # - postgres/service.yaml      # Commented out - using RDS
   - backend/deployment.yaml
   - backend/service.yaml
   - backend/hpa.yaml

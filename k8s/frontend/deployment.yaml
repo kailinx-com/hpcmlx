@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: kailinxdocker/hpcmlx-frontend:latest  # Update with your container registry
-        imagePullPolicy: IfNotPresent
+        image: 557690608348.dkr.ecr.us-east-1.amazonaws.com/hpcmlx-frontend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
           name: http

@@ -17,6 +17,14 @@ export default defineConfig({
         target: process.env.API_URL || 'http://backend:8000',
         changeOrigin: true,
       },
+      '/static': {
+        target: process.env.API_URL || 'http://backend:8000',
+        changeOrigin: true,
+      },
+      '/admin': {
+        target: process.env.API_URL || 'http://backend:8000',
+        changeOrigin: true,
+      },
     },
   },
 })

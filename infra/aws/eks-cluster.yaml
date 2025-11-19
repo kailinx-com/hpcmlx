@@ -4,7 +4,7 @@ kind: ClusterConfig
 metadata:
   name: hpcmlx-prod
   region: us-east-1
-  version: "1.28"
+  version: "1.34"
 
 iam:
   withOIDC: true

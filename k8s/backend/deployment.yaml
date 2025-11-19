@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: backend
-        image: kailinxdocker/hpcmlx-backend:latest  # Update with your container registry
-        imagePullPolicy: IfNotPresent
+        image: 557690608348.dkr.ecr.us-east-1.amazonaws.com/hpcmlx-backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
           name: http
@@ -68,6 +68,16 @@ spec:
             configMapKeyRef:
               name: hpcmlx-config
               key: CSRF_TRUSTED_ORIGINS
+        - name: CSRF_COOKIE_SECURE
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: CSRF_COOKIE_SECURE
+        - name: SESSION_COOKIE_SECURE
+          valueFrom:
+            configMapKeyRef:
+              name: hpcmlx-config
+              key: SESSION_COOKIE_SECURE
         command:
         - sh
         - -c
@@ -102,4 +112,3 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-
