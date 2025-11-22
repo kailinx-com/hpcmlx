@@ -8,11 +8,9 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      # Optimize PostgreSQL for minimal memory usage
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # Resource limits for 1GB RAM instance
     deploy:
       resources:
         limits:
@@ -21,7 +19,6 @@ services:
         reservations:
           cpus: '0.25'
           memory: 120M
-    # Optimized PostgreSQL settings for low memory
     command: >
       postgres
       -c shared_buffers=32MB
@@ -40,11 +37,11 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - internal
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/hpcmlx/hpcmlx/backend:latest
     container_name: hpcmlx_backend
     env_file:
       - .env
@@ -64,7 +61,6 @@ services:
       - DEBUG=${DEBUG:-False}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
-    # Resource limits for 1GB RAM instance
     deploy:
       resources:
         limits:
@@ -83,22 +79,17 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    networks:
+      - internal
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+    image: ghcr.io/hpcmlx/hpcmlx/frontend:latest
     container_name: hpcmlx_frontend
-    ports:
-      - "80:80"
     volumes:
       - static_volume:/usr/share/nginx/html/static:ro
     depends_on:
       backend:
         condition: service_healthy
-    # Resource limits for 1GB RAM instance
     deploy:
       resources:
         limits:
@@ -108,8 +99,16 @@ services:
           cpus: '0.05'
           memory: 25M
     restart: unless-stopped
+    networks:
+      - internal
+      - web_gateway
 
 volumes:
   postgres_data:
   static_volume:
 
+networks:
+  internal:
+    internal: true
+  web_gateway:
+    external: true
