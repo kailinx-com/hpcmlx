@@ -20,6 +20,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Downcase REPO
+        run: |
+          echo "IMAGE_REPO=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -35,7 +39,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -44,7 +48,7 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/frontend:latest
           build-args: |
             VITE_API_URL=https://hpcmlx.kailinx.com/api
           cache-from: type=gha
@@ -76,6 +80,9 @@ jobs:
             # Navigate to app directory
             mkdir -p ~/app/hpcmlx
             cd ~/app/hpcmlx
+            
+            # Export lowercase repo name for docker-compose
+            export IMAGE_REPO=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
             
             # Login to GHCR
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin

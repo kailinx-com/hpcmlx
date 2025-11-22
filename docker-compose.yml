@@ -41,7 +41,7 @@ services:
       - internal
 
   backend:
-    image: ghcr.io/hpcmlx/hpcmlx/backend:latest
+    image: ghcr.io/${IMAGE_REPO}/backend:latest
     container_name: hpcmlx_backend
     env_file:
       - .env
@@ -83,7 +83,7 @@ services:
       - internal
 
   frontend:
-    image: ghcr.io/hpcmlx/hpcmlx/frontend:latest
+    image: ghcr.io/${IMAGE_REPO}/frontend:latest
     container_name: hpcmlx_frontend
     volumes:
       - static_volume:/usr/share/nginx/html/static:ro
