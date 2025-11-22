@@ -84,6 +84,12 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT', '5432'),
+        # Optimize database connections for low memory
+        'OPTIONS': {
+            'connect_timeout': 10,
+        },
+        # Connection pooling settings for minimal memory usage
+        'CONN_MAX_AGE': 300,  # Reuse connections for 5 minutes
     }
 }
 
@@ -123,10 +129,9 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
-USE_I18N = True
-
-USE_L10N = True
-
+# Disable i18n and l10n to save memory (if not needed)
+USE_I18N = False
+USE_L10N = False
 USE_TZ = True
 
 
