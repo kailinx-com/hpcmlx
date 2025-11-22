@@ -41,7 +41,8 @@ services:
       - internal
 
   backend:
-    image: ghcr.io/${IMAGE_REPO}/backend:latest
+    build: ./backend
+    image: ghcr.io/${IMAGE_REPO:-kailinx-com/hpcmlx}/backend:latest
     container_name: hpcmlx_backend
     env_file:
       - .env
@@ -83,8 +84,11 @@ services:
       - internal
 
   frontend:
-    image: ghcr.io/${IMAGE_REPO}/frontend:latest
+    build: ./frontend
+    image: ghcr.io/${IMAGE_REPO:-kailinx-com/hpcmlx}/frontend:latest
     container_name: hpcmlx_frontend
+    ports:
+      - "8080:80"
     volumes:
       - static_volume:/usr/share/nginx/html/static:ro
     depends_on:
