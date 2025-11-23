@@ -82,6 +82,7 @@ services:
     restart: unless-stopped
     networks:
       - internal
+      - app_app-network
 
   frontend:
     build: ./frontend
@@ -105,7 +106,7 @@ services:
     restart: unless-stopped
     networks:
       - internal
-      - web_gateway
+      - app_app-network
 
 volumes:
   postgres_data:
@@ -114,5 +115,5 @@ volumes:
 networks:
   internal:
     internal: true
-  web_gateway:
+  app_app-network:
     external: true
